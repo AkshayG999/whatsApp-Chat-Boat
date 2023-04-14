@@ -78,12 +78,12 @@ const listMessageSend = (messageObject) => {
             },
         }
     )
-        .then(function (response) {
-            console.log(response);
-            return (response.data)
+        .then(function (res) {
+            // console.log(response.data);
+            return (res.response)
         })
         .catch(function (error) {
-            console.log("server error", error);
+            console.log("server error", error.response);
             // return res.status(500).send({ status: false, message: "server error" })
         });
 }
@@ -120,6 +120,9 @@ app.post("/webhook", async (req, res) => {
                 console.log(msg_body)
 
                 if (msg_body.trim().toLowerCase() == 'test' || msg_body.trim().toLowerCase() == 'hello') {
+
+                  
+
                     //welcome Message send
                     sendMessageTemplate('welcome', from)
                         .then(async function (response) {
@@ -138,15 +141,12 @@ app.post("/webhook", async (req, res) => {
 
                                 const listInteractiveObject = {
                                     type: "list",
-                                    header: {
-                                        type: "text",
-                                        text: "To Start with Please select your city",
-                                    },
+
                                     body: {
-                                        text: "City Dropdown to be provided",
+                                        text: "To start, please select your City :",
                                     },
                                     action: {
-                                        button: "City List No- " + listNumber,
+                                        button: "City List No - " + listNumber,
                                         sections: [
                                             {
                                                 title: 'Choose Your City',
@@ -222,47 +222,49 @@ app.post("/webhook", async (req, res) => {
                 const { interactive, from } = messages[0]
                 console.log(interactive)
 
-                if (interactive.list_reply.title == "More") {
+                // if (interactive.list_reply.title == "More") {
 
-                    // City List map
+                //     // City List map
 
-                    // row.splice(19, 0, { id: "19", title: "More" })
+                //     // row.splice(19, 0, { id: "19", title: "More" })
 
-                    console.log(row)
+                //     console.log(row)
 
-                    const listInteractiveObject = {
-                        type: "list",
-                        header: {
-                            type: "text",
-                            text: "To Start with Please select your city",
-                        },
-                        body: {
-                            text: "City Dropdown to be provided",
-                        },
-                        action: {
-                            button: "City List",
-                            sections: [
-                                {
-                                    title: 'Choose Your City',
-                                    rows: row.slice(9, 19)
-                                },
-                            ],
-                        },
+                //     const listInteractiveObject = {
+                //         type: "list",
+                //         header: {
+                //             type: "text",
+                //             text: "To Start with Please select your city",
+                //         },
+                //         body: {
+                //             text: "City Dropdown to be provided",
+                //         },
+                //         action: {
+                //             button: "City List",
+                //             sections: [
+                //                 {
+                //                     title: 'Choose Your City',
+                //                     rows: row.slice(9, 19)
+                //                 },
+                //             ],
+                //         },
 
-                    };
+                //     };
 
-                    let messageObject = {
-                        messaging_product: "whatsapp",
-                        recipient_type: "individual",
-                        to: from,
-                        type: "interactive",
-                        interactive: listInteractiveObject,
-                    };
+                //     let messageObject = {
+                //         messaging_product: "whatsapp",
+                //         recipient_type: "individual",
+                //         to: from,
+                //         type: "interactive",
+                //         interactive: listInteractiveObject,
+                //     };
 
-                    listMessageSend(messageObject) // City List message 
+                //     listMessageSend(messageObject) // City List message 
 
-                    //user select city with Reply for locations
-                } else if (row.some((city) => city.title == interactive.list_reply.title)) {
+                //     //user select city with Reply for locations
+                // } else
+
+                if (row.some((city) => city.title == interactive.list_reply.title)) {
                     console.log("user select city to get location= ", interactive.list_reply.title)
 
                     const findUser = await WhatsAppSession.findOne({ mobileNumber: from })
@@ -275,7 +277,7 @@ app.post("/webhook", async (req, res) => {
                         const createUser = await WhatsAppSession.create({ mobileNumber: from, cityReply: [city] })
                         // console.log(createUser)
                     } else {
-                        const update = await WhatsAppSession.findOneAndUpdate({ mobileNumber: from }, { $push: { cityReply: city } }, { new: true })
+                        const update = await WhatsAppSession.findOneAndUpdate({ mobileNumber: from }, { cityReply: [city] }, { new: true })
                         // console.log(update)
                     }
 
@@ -295,15 +297,12 @@ app.post("/webhook", async (req, res) => {
 
                         const listInteractiveObject = {
                             type: "list",
-                            header: {
-                                type: "text",
-                                text: "Please select your location",
-                            },
+                            
                             body: {
-                                text: "Nearest location Dropdown",
+                                text: "Please select your Location :",
                             },
                             action: {
-                                button: "Location List- " + listNumber,
+                                button: "Location List - " + listNumber,
                                 sections: [
                                     {
                                         title: 'Choose Your Location',
@@ -377,20 +376,39 @@ app.post("/webhook", async (req, res) => {
                         id: interactive.list_reply.id.split(' ')[1],
                         title: interactive.list_reply.title,
                     }
-                    const update = await WhatsAppSession.findOneAndUpdate({ mobileNumber: from }, { $push: { locationReply: location } }, { new: true })
 
+                    const update = await WhatsAppSession.findOneAndUpdate({ mobileNumber: from }, { locationReply: [location] }, { new: true })
+
+                    // User Register or Not check
                     const userCheck = await getUser(from.slice(2, 12))
                     console.log(userCheck)
 
                     if (userCheck.data.length > 0) {
 
                         sendMessageTemplate('welcome_buttons_with_booking', from)
-                            .then((response) => { return (res.response) })
+                            .then((res) => { return (res.response) })
 
                     } else {
 
                         sendMessageTemplate('welcome_buttons_without_mybooking', from)
                     }
+
+                } else if (interactive.list_reply.title == 'Booking Procedure') {
+
+                    sendMessageTemplate('booking_procedure_steps', from)
+
+                } else if (interactive.list_reply.title == 'Rescheduling/Booking') {
+
+                    sendMessageTemplate('rescheduling_policy', from)
+
+                } else if (interactive.list_reply.title == 'Cancellation/Refund') {
+
+                    sendMessageTemplate('cancellation_policy', from)
+
+                } else if (interactive.list_reply.title == 'Fuel Policy') {
+
+                    sendMessageTemplate('fuel_policy', from)
+
                 }
 
                 //>>>>>>>>>>BUTTON>>>>>>>>>>>>>>>>>>>
@@ -399,40 +417,151 @@ app.post("/webhook", async (req, res) => {
                 const { from, button } = messages[0]
 
                 if (button.payload == 'Book a Bike') {
+
+                    const userCheck = await getUser(from.slice(2, 12))
+                    if (userCheck) {
+
+                        sendMessageTemplate("button_book_now_more_query_noname", from)
+
+                    } else {
+
+                        sendMessageTemplate("button_book_now_more_query_noname", from)
+                    }
+
+
+                } else if (button.payload == 'Book Now?') {
+
+                    const userChatData = await WhatsAppSession.find({ mobileNumber: from })
+                    const cityName = userChatData[0].cityReply[0].title.replace(/"/g, '');
+                    const locationName = userChatData[0].locationReply[0].title.replace(/ /g, '-')
+
+                    const url =`/${cityName}/any/any/${locationName}/1681709400000/1681731000000/Asia/Calcutta`
+                    // console.log(url)
+
+                    const component = [
+                        {
+                            "type": "button",
+                            "sub_type": "url",
+                            "index": "0",
+                            "parameters": [
+                                {
+                                    "type": "text",
+                                    "text": url
+                                }
+                            ]
+                        },
+                    ];
+
+
+                    sendMessageTemplate("redirect_link_web_app", from, component)
+
+                } else if (button.payload == 'My Bookings') {
+
                     console.log(button.payload, "from ", from)
+
+
+                } else if (button.payload == 'Any Other Queries (FAQ)' || button.payload == 'Have more Queries?') {
+
+                    sendMessageTemplate("any_other_query_faq", from)
+
+                } else if (button.payload == 'Payment') {
+
+                    sendMessageTemplate("how_do_make_payment", from)
+
+                } else if (button.payload == 'How do I make Payments?') {
+
+                    sendMessageTemplate("payment_acceptance", from)
+
+                } else if (button.payload == 'Booking') {
+
+                    const listInteractiveObject = {
+                        type: "list",
+                        body: {
+                            text: "Please choose an option",
+                        },
+                        action: {
+                            button: "Drop Down List",
+                            sections: [
+                                {
+                                    title: "Choose Option",
+                                    rows: [
+                                        {
+                                            id: "101",
+                                            title: "Booking Procedure",
+
+                                        },
+                                        {
+                                            id: "102",
+                                            title: "Rescheduling/Booking",
+                                            description: "extension policy"
+
+                                        },
+                                        {
+                                            id: "103",
+                                            title: "Cancellation/Refund",
+                                            description: "policy"
+
+                                        },
+                                        {
+                                            id: "104",
+                                            title: "Fuel Policy",
+
+                                        },
+                                    ],
+                                },
+                            ],
+                        }
+                    }
+
+                    let messageObject = {
+                        messaging_product: "whatsapp",
+                        recipient_type: "individual",
+                        to: from,
+                        type: "interactive",
+                        interactive: listInteractiveObject,
+                    };
+
+                    listMessageSend(messageObject) // Booking Query list 
+
+                } else if (button.payload == 'Damage') {
+
+                    sendMessageTemplate("damage_query__buttos", from)
+
+                } else if (button.payload == 'Accident/Physical Damage') {
+
                     const component = [
                         {
                             "type": "body",
                             "parameters": [
                                 {
                                     "type": "text",
-                                    "text": "Akshay"
-                                },
-                                {
-                                    "type": "text",
-                                    "text": "akshay@gmail.com"
-                                },
-                                {
-                                    "type": "text",
-                                    "text": from
+                                    "text": "123456789"
                                 },
                             ]
                         }
                     ]
-                    sendMessageTemplate("become_a_partner", from, component)
 
-                } else if (button.payload == 'My Bookings') {
-                    console.log(button.payload, "from ", from)
+                    sendMessageTemplate("accidental_physical_damage", from, component)
 
+                } else if (button.payload == 'Bike Break down') {
 
-                } else if (button.payload == 'Any Other Queries (FAQ)') {
-                    console.log(button.payload)
-                    console.log(from)
+                    const component = [
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {
+                                    "type": "text",
+                                    "text": "12345678"
+                                },
+                            ]
+                        }
+                    ]
 
-                    sendMessageTemplate("any_other_query_faq", from)
+                    sendMessageTemplate("bike_break_down", from, component)
 
-                } else if (button.payload == 'Payment') {
+                } else if (button.payload == 'Puncture Related issues') {
 
+                    sendMessageTemplate("puncture_related_issues", from)
                 }
             }
 
@@ -452,10 +581,7 @@ app.post("/webhook", async (req, res) => {
 // Accepts GET requests at the /webhook endpoint. You need this URL to setup webhook initially.
 // info on verification request payload: https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verification-requests 
 app.get("/webhook", (req, res) => {
-    /**
-     * UPDATE YOUR VERIFY TOKEN
-     *This will be the Verify Token value when you set up webhook
-    **/
+
     const verify_token = process.env.VERIFY_TOKEN;
 
     // Parse params from the webhook verification request
@@ -465,13 +591,13 @@ app.get("/webhook", (req, res) => {
 
     // Check if a token and mode were sent
     if (mode && token) {
-        // Check the mode and token sent are correct
+
         if (mode === "subscribe" && token === verify_token) {
-            // Respond with 200 OK and challenge token from the request
+
             console.log("WEBHOOK_VERIFIED");
             res.status(200).send(challenge);
         } else {
-            // Responds with '403 Forbidden' if verify tokens do not match
+
             res.sendStatus(403);
         }
     }
