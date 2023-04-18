@@ -211,7 +211,7 @@ app.post("/webhook", async (req, res) => {
                             return res.status(200).send({ status: true, message: "success" })
 
                         }).catch(function (err) {
-                            console.log(err)
+                            console.log(err.response)
                             return res.status(500).send({ status: false, message: err.message })
                         })
                 }
