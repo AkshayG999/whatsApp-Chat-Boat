@@ -435,7 +435,7 @@ app.post("/webhook", async (req, res) => {
                     const cityName = userChatData[0].cityReply[0].title.replace(/"/g, '');
                     const locationName = userChatData[0].locationReply[0].title.replace(/ /g, '-')
 
-                    const url =`/${cityName}/any/any/${locationName}/1681709400000/1681731000000/Asia/Calcutta`
+                    const url =`/${cityName}/any/any/${locationName}/1681806600000/1681828200000/Asia/Calcutta`
                     // console.log(url)
 
                     const component = [
